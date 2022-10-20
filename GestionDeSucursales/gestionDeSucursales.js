@@ -6,8 +6,7 @@ const http = require('http')
 
 var myVar = (request, response) => {
     console.log('2) Socket connected');
-  
-    
+
     response.setHeader("Content-Type","application/json")
     response.writeHead(200)
     response.end(JSON.stringify(sucursales))
