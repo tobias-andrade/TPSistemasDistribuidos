@@ -1,7 +1,10 @@
 const http = require('http');
 
-const request = http.request('http://localhost:8080/', { method: 'GET' }, function (response) {
+const request = http.request('http://localhost:8080', { method: 'POST' , path: '/api/sucursales/1'}, function (response) {
 
+console.log(response.url)
+console.log(response.statusCode)
+console.log(response.headers)
   let body = ''
 
   response.on('data', (chunk) => {
@@ -20,6 +23,6 @@ const request = http.request('http://localhost:8080/', { method: 'GET' }, functi
 
 });
 
-request.write('hola');
+//request.write(JSON.stringify(json));
 
 request.end();
