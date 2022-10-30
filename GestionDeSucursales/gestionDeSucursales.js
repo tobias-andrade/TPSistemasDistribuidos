@@ -3,6 +3,7 @@ const sucursales = require('./sucursales.json');
 console.log(sucursales)
 
 const http = require('http')
+const port = 8080;
 
 //busca sucursal por id, se supone que el id existe, en caso de no existir devuelve null
 var buscaSucursal = function(id){
@@ -65,6 +66,6 @@ var myVar = (request, response) => {
 
 const server = http.createServer(myVar);
 
-server.listen(8080, function() {
+server.listen(port, function() {
   console.log('1) Server started');
 });
