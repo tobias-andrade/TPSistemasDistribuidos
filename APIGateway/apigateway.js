@@ -1,6 +1,6 @@
 const http = require('http');
 
-const request = http.request('http://localhost:8081', { method: 'POST' , path: '/api/send'}, function (response) {
+const request = http.request('http://localhost:8080', { method: 'POST' , path: '/api/sucursales/1'}, function (response) {
 
 console.log(response.url)
 console.log(response.statusCode)
@@ -23,12 +23,6 @@ console.log(response.headers)
 
 });
 
-let json ={
-  'destinatario': 'tobiaseltoti5@gmail.com',
-  'asunto': 'NUEVO MENSAJE',
-  'cuerpo': 'Hola tobias'
-}
-
-request.write(JSON.stringify(json));
+//request.write(JSON.stringify(json));
 
 request.end();
