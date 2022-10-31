@@ -1,6 +1,6 @@
 const http = require('http');
 
-const request = http.request('http://localhost:8080', { method: 'POST' , path: '/api/sucursales/1'}, function (response) {
+const request = http.request('http://localhost:8082', { method: 'GET' , path: '/api/reservas?dateTime=2022/09/02&userID=2'}, function (response) {
 
 console.log(response.url)
 console.log(response.statusCode)
