@@ -1,6 +1,6 @@
 const http = require('http');
 
-const request = http.request('http://localhost:8082', { method: 'GET' , path: '/api/reservas?dateTime=2022/09/02&userID=2'}, function (response) {
+const request = http.request('http://localhost:8081', { method: 'POST' , path: '/api/send'}, function (response) {
 
 console.log(response.url)
 console.log(response.statusCode)
@@ -23,6 +23,11 @@ console.log(response.headers)
 
 });
 
-//request.write(JSON.stringify(json));
+let json={
+  destinatario: 'tobiaseltoti5@gmail.com',
+  asunto: 'nuevo mail',
+  cuerpo: 'hola hola'
+}
+request.write(JSON.stringify(json));
 
 request.end();

@@ -1,5 +1,5 @@
 const fs = require('fs');
-const jsonReservas = require('./reservas.json');
+//let jsonReservas = require('./reservas.json');
 const http = require('http');
 const port = 8082
 
@@ -15,6 +15,7 @@ class Reserva {
 }
 
 let buscaReserva =  (branchId, dateTime) => {
+    let jsonReservas= actualizaJson()
     let encontro = false;
     for (let i = 0; i < jsonReservas.length; i++) {
         if ((jsonReservas[i].branchId == branchId) && (jsonReservas[i].dateTime == dateTime)){
@@ -25,10 +26,17 @@ let buscaReserva =  (branchId, dateTime) => {
     return encontro;
 }
 
+let actualizaJson = function(){
+    let rawdata = fs.readFileSync('./reservas.json')
+    let jsonReservas = JSON.parse(rawdata)
+    return jsonReservas
+}
+
 
 let buscaReservaPorId = function(id){
     let res={}
     let i=0
+    let jsonReservas= actualizaJson()
     while(i<jsonReservas.length && jsonReservas[i].id != id){
         i++
     }
@@ -45,6 +53,7 @@ let buscaReservaLibre = function(userId, branchId, dateTime){
     let res = []
     let date = dateTime? new Date(dateTime): null
     console.log(date)
+    let jsonReservas= actualizaJson()
     for(let i=0; i<jsonReservas.length; i++){
         if(jsonReservas[i].userId == userId){
             if(date != null){
@@ -75,7 +84,16 @@ let buscaReservaLibre = function(userId, branchId, dateTime){
     return res
 }
 
+let eliminaReserva = function(id){
 
+    let jsonReservas = actualizaJson()
+    let res;
+    for(let i=0;i<jsonReservas.length; i++){
+        if(jsonReservas[i].id == id && jsonReservas[i].userId != null && jsonReservas[i].email != null){
+            
+        }
+    }
+}
 
 var myVar = (request, response) => {
     console.log('2) Socket connected');
@@ -93,14 +111,15 @@ var myVar = (request, response) => {
             case 'GET':
                 if(url.length == 3){
                     //viene un id de una reserva, hay que devolver la reserva esa
+
                     let respuesta = buscaReservaPorId(url[2])
                     if(respuesta != null){
                         response.writeHead(200)
                         response.end(JSON.stringify(respuesta))
                     }else{
-                    response.writeHead(400)
-                    res={messageError:'reserva no encontrada'}
-                    response.end(JSON.stringify(res))
+                        response.writeHead(400)
+                        res={messageError:'reserva no encontrada'}
+                        response.end(JSON.stringify(res))
                     }
                 }else{
                     //pueden venir query params, filtrar reservas y devolverlas
@@ -122,6 +141,7 @@ var myVar = (request, response) => {
             case 'POST':
                 break;
             case 'DELETE':
+
                 break
             default:
         }
