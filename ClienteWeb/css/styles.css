@@ -1,0 +1,5 @@
+iframe {
+    display: block;
+    margin: 0 auto;
+    border: thick double #32a1ce;
+}
