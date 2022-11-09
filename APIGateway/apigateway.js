@@ -1,4 +1,7 @@
 const http = require('http');
+/*
+
+PARTE PARA PROBAR SENDGRID ---- DEJE COMENTADA PARA PROBAR SUCURSALES
 
 const request = http.request('http://localhost:8081', { method: 'POST' , path: '/api/send'}, function (response) {
 
@@ -13,7 +16,7 @@ console.log(response.headers)
 
   response.on('end', () => {
     body = JSON.parse(body)
-    
+
     console.log(body);
   });
 
@@ -31,3 +34,51 @@ let json={
 request.write(JSON.stringify(json));
 
 request.end();
+
+*/
+
+
+let optionsGetSucursales = {
+  hostname: 'localhost',
+  port: 8080,
+  method: 'GET',
+  path: '/api/sucursales',
+  headers: { "Content-Type": "application/json" }
+}
+
+async function getSucursales(options){
+  const promise = new Promise((resolve,reject) => {
+    const request = http.request(options, function (response) {
+      let body = '';
+      response.on('data', (chunk) => {
+        body += chunk;
+      });
+      response.on('end', () => {
+        body = JSON.parse(body);
+        resolve(body);
+      });
+      response.on('close', () => {
+        console.log('3) Connection to sucursales closed');
+      });
+    });
+    request.end();
+  });
+  return promise;
+}
+
+const server = http.createServer((request, response) => {
+  let url = request.url.split("/").filter(Boolean);
+  response.setHeader('Content-Type', 'application/json');
+  if ((request.method === "GET") && (url[0] === "api") && (url[1] === "sucursales") && (url.length <= 3)) {
+    const promise = getSucursales(optionsGetSucursales);
+    promise.then((dataSucursales) => {
+      response.setHeader('Access-Control-Allow-Origin','*');
+      response.end(JSON.stringify(dataSucursales));
+    })
+  }
+});
+
+
+server.listen(8085, function () {
+  console.log(`Server started on port: ${8085}`);
+});

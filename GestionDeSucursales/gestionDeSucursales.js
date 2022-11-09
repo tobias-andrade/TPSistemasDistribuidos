@@ -18,7 +18,8 @@ const server = http.createServer( (request, response) => {
   response.setHeader('Content-Type', 'application/json');
   if ((request.method === "GET") && (url[0] === "api") && (url[1] === "sucursales") && (url.length<=3)) {
     if (url.length == 2) { //Devolver todas las sucursales
-      response.writeHead(successCode);
+      response.writeHead(config.successCode);
+      console.log("Conexión entrante");
       res = sucursales;
     } else { //Devolver sucursal de id especifica
       let suc = buscaSucursal(url[2]);
@@ -28,16 +29,16 @@ const server = http.createServer( (request, response) => {
           'lng': suc.lng,
           'name': suc.name
         }
-        response.writeHead(successCode);
+        response.writeHead(config.successCode);
       } else { //Error: La sucursal no fue encontrada
-        response.writeHead(sucursalNotFoundError)
+        response.writeHead(config.sucursalError);
         res = {
           messageError: 'Sucursal no encontrada'
         }
       }
     }
   } else { //Error: El servicio no existe
-    response.writeHead(serviceNotFoundError)
+    response.writeHead(config.serviceError)
     res = {
       messageError: 'Servicio no encontrado'
     }
@@ -46,6 +47,6 @@ const server = http.createServer( (request, response) => {
 });
 
 
-server.listen(port, function () {
-  console.log(`Server started on port: ${port}`);
+server.listen(config.port, function () {
+  console.log(`Server started on port: ${config.port}`);
 });

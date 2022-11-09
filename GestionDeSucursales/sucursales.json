@@ -1,12 +1,12 @@
 [
     {
-    "id": 3,
+    "branchId": 3,
     "lat": -38.012061,
     "lng": -57.5835651,
     "name": "Sucursal del sur"
     },
     {
-    "id": 4,
+    "branchId": 4,
     "lat": -35.012061,
     "lng": -52.5835651,
     "name": "Sucursal del norte"
