@@ -1,6 +1,6 @@
 const sucursales = require('./sucursales.json');
 const http = require('http');
-const config = require('./config.json');
+const config = require('..config.json/')
 
 //busca sucursal por id, se supone que el id existe, en caso de no existir devuelve null
 var buscaSucursal = function (id) {
@@ -18,7 +18,7 @@ const server = http.createServer( (request, response) => {
   response.setHeader('Content-Type', 'application/json');
   if ((request.method === "GET") && (url[0] === "api") && (url[1] === "sucursales") && (url.length<=3)) {
     if (url.length == 2) { //Devolver todas las sucursales
-      response.writeHead(config.successCode);
+      response.writeHead(config.SUCCESCODE);
       console.log("Conexión entrante");
       res = sucursales;
     } else { //Devolver sucursal de id especifica
@@ -29,9 +29,9 @@ const server = http.createServer( (request, response) => {
           'lng': suc.lng,
           'name': suc.name
         }
-        response.writeHead(config.successCode);
+        response.writeHead(config.SUCCESCODE);
       } else { //Error: La sucursal no fue encontrada
-        response.writeHead(config.sucursalError);
+        response.writeHead(config.SUCURSALERROR);
         res = {
           messageError: 'Sucursal no encontrada'
         }
@@ -47,6 +47,6 @@ const server = http.createServer( (request, response) => {
 });
 
 
-server.listen(config.port, function () {
+server.listen(config.PORTSUCURSALES, function () {
   console.log(`Server started on port: ${config.port}`);
 });

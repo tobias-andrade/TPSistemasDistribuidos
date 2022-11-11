@@ -1,6 +1,0 @@
-{
-    "port": 8080,
-    "successCode": 200,
-    "serviceError": 400,
-    "sucursalError": 401
-}

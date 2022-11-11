@@ -2,32 +2,8 @@ const http = require('http')
 const https = require('node:https')
 const sgMail = require('@sendgrid/mail')
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
-const port = 8081
+const config = require('../config.json')
 
-var sendEmail = async function(destinatario, asunto, cuerpo) {
-  let msg = {
-    to: destinatario, // Change to your recipient
-    from: 'lucianofrangolini2@gmail.com', // Change to your verified sender
-    subject: asunto,
-    //text: 'and easy to do anywhere, even with Node.js',
-    html: '<strong>'+cuerpo+'</strong>',
-  }
-  
-  sgMail
-  .send(msg)
-  .then((response) => {
-    console.log(response[0].statusCode)
-    console.log(response[0].headers)
-    console.log('ok')
-    return 200
-  })
-  .catch((error) => {
-    console.log('error')
-    return error.ResponseError
-    console.error(error)
-  })
-
-}
 
 var option = (request, response)=> {
   let url = request.url.substring(1)
@@ -49,52 +25,44 @@ var option = (request, response)=> {
     console.log(body)
     if(method == 'POST'){
       //metodo aceptado
-      if(url[0] == 'api' && url[1]== 'send'){
+      if(url[0] == 'api' && url[1]== 'notificacion'){
         if(!body.hasOwnProperty('destinatario') || body['destinatario'] == null || body['destinatario'] == ''){
-          response.writeHead(400)
+          response.writeHead(config.SERVICEERROR)
           res={errorMessage:'Destinatario no puede ser null'}
           response.end(JSON.stringify(res))
         }else if(!body.hasOwnProperty('asunto')|| body['asunto'] == null || body['asunto']==''){
-          response.writeHead(400)
+          response.writeHead(config.SERVICEERROR)
           res={errorMessage:'Asunto no puede ser null'}
           response.end(JSON.stringify(res))
         }else if(!body.hasOwnProperty('cuerpo') || body['cuerpo']== null || body['cuerpo']==''){
-          response.writeHead(400)
+          response.writeHead(config.SERVICEERROR)
           res={errorMessage:'Cuerpo no puede ser null'}
           response.end(JSON.stringify(res))
         }else{
           //mando el mail
-        
-          /*const msg = {
-            to: body['destinatario'], // Change to your recipient
-            from: 'lucianofrangolini2@gmail.com', // Change to your verified sender
-            subject: body['asunto'],
-            //text: 'and easy to do anywhere, even with Node.js',
-            html: '<strong>'+body['cuerpo']+'</strong>'}*/
-            sendEmail2(body['destinatario'], body['asunto'], body['cuerpo'])
-           /* sgMail
-              .send(msg)
-              .then((val) => {
-                console.log(val[0].statusCode)
-                console.log(val[0].headers)
-                response.writeHead(200)
+            sendEmail(body['destinatario'], body['asunto'], body['cuerpo'])
+            .then((value)=>{
+              //email enviado
+                response.writeHead(config.SUCCESCODE)
+                response.end(JSON.stringify({message:'mail enviado'}))
+              
+            })
+            .catch((value)=>{
+              //email no enviado
+              response.writeHead(config.SERVICEERROR)
+                let res ={errorMessage:'Mail no enviado'}
                 response.end(JSON.stringify(res))
-               })
-              .catch((error) => {
-                //console.log(error.response.body.errors[0].message)
-                response.writeHead(401)
-                res={errorMessage: error.response.body.errors[0].message}
-                response.end(JSON.stringify(res))
-                //console.error(error)
-              })*/
+              
+            })
+          
         }
       }else{
-        response.writeHead(400)
+        response.writeHead(config.SERVICEERROR)
         res ={errorMessage: 'Servicio no encontrado'}
         response.end(JSON.stringify(res))
       }
     }else{
-      response.writeHead(400)
+      response.writeHead(config.SERVICEERROR)
       res ={errorMessage: 'Servicio no encontrado'}
       response.end(JSON.stringify(res))
 
@@ -106,14 +74,11 @@ var option = (request, response)=> {
 
 const server = http.createServer(option);
 
-server.listen(port, function() {
+server.listen(config.PORTNOTIFICACIONES, function() {
   console.log('1) Server started');
 });
 
-let sendEmail2 = function(destinatario, subject, contenido){
-
-  console.log('entre a sendemail')
-let optionsCreateMap = {
+let optionSendEmail = {
     hostname: 'api.sendgrid.com',
     //port: 8080,
     method: 'POST',
@@ -121,55 +86,42 @@ let optionsCreateMap = {
     headers: {"Content-Type": "application/json", 'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`}
 }
 
-let request = https.request(optionsCreateMap, (response) =>{
+let sendEmail = function(destinatario, subject, contenido){
 
-  console.log(response.statusCode)
-  
-  let body=''
-  /*response.on('data', (chunk) => {
-    body += chunk;
+  return new Promise(function(resolve, reject){
+  let request = https.request(optionSendEmail, (response) =>{
+    console.log(response.statusCode)
+    if(response.statusCode>=200 && response.statusCode<=208){
+      resolve()
+    }else{
+      reject()
+    }
   });
 
-  response.on('end', () => {
-
-    //body = JSON.parse(body)
-    
-    console.log(body);
-  });
-
-  response.on('close', () => {
-      console.log('3) Connection closed');
-
-  });*/
-});
-
-let cuerpo = {
-  "personalizations":[{
-    "to":[{
-      "email":destinatario,
-      "name":""
+  let cuerpo = {
+    "personalizations":[{
+      "to":[{
+        "email":destinatario,
+        "name":""
+      }],
+      "subject":subject
     }],
-    "subject":subject
-  }],
-  "content": [{
-    "type": "text/plain", 
-    "value": contenido
-  }],
-  "from":{
-    "email":"lucianofrangolini2@gmail.com",
-    "name":""},
-    "reply_to":{
+    "content": [{
+      "type": "text/plain", 
+      "value": contenido
+    }],
+    "from":{
       "email":"lucianofrangolini2@gmail.com",
-      "name":""
-    }}
-
-    console.log(process.env.SENDGRID_API_KEY)
-
-request.write(JSON.stringify(cuerpo))
-request.end()
-
-
-  }
+      "name":""},
+      "reply_to":{
+        "email":"lucianofrangolini2@gmail.com",
+        "name":""
+      }
+    }
+    request.write(JSON.stringify(cuerpo))
+    request.end()
+  })
+}
 /*curl --request POST \
 --url https://api.sendgrid.com/v3/mail/send \
 --header 'Authorization: Bearer <<YOUR_API_KEY>>' \
