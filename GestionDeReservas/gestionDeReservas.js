@@ -1,8 +1,9 @@
 const fs = require('fs');
 //let jsonReservas = require('./reservas.json');
 const http = require('http');
-const port = 8082
-
+const { json } = require('stream/consumers');
+const config= require('../config.json')
+const TIEMPOBLOQUEADO = 600000
 
 class Reserva {
     constructor(id, dateTime, userId, email, branchId) {
@@ -55,7 +56,8 @@ let buscaReservaLibre = function(userId, branchId, dateTime){
     console.log(date)
     let jsonReservas= actualizaJson()
     for(let i=0; i<jsonReservas.length; i++){
-        if(jsonReservas[i].userId == userId){
+        if(jsonReservas[i].userId == userId && ((userId==-1 && jsonReservas[i].status == 0) || (userId>=0 && jsonReservas[i].status == 2))){
+            //ACLARACION: tiene que coincidir userId (-1,0 u otro) y ademas si es -1(libre) el status de la reserva debe ser 0, si es distinto de -1 el status debe ser 2 (confirmado)
             if(date != null){
                 let date2 = new Date(jsonReservas[i].dateTime)
                 if(date.getUTCDate() == date2.getUTCDate() && date.getUTCMonth() == date2.getUTCMonth() && date.getUTCFullYear() == date2.getUTCFullYear()){
@@ -95,8 +97,117 @@ let eliminaReserva = function(id){
     }
 }
 
+let solicitaReserva = function(idReserva, idUser){
+    let jsonReservas = actualizaJson()
+    let res;
+    let i=0;
+    while(i<jsonReservas.length && jsonReservas[i].id!=idReserva ){
+        i++
+    }
+    if(i<jsonReservas.length){
+        if(jsonReservas[i].id == idReserva && jsonReservas[i].status == 0 && jsonReservas[i].userId == -1){
+            //actualizo json con un 1 en status y activo timer
+            jsonReservas[i].status=1
+            jsonReservas[i].userId=idUser
+            escribirJson(jsonReservas)
+            setTimeout(function(id){
+                let reservas = actualizaJson()
+                let j=0
+                while(j<reservas.length && reservas[j] != id){
+                    j++
+                }
+                if(reservas[j].status == 1){
+                    //no se confirmo, debo desbloquear la reserva
+                    reservas[j].userId=-1
+                    reservas[j].status=0
+                    escribirJson(reservas)
+                }
+            }, TIEMPOBLOQUEADO, idReserva)
+            return true;
+        }else{
+            return false;
+        }
+    }else{
+        return false;
+    }
+}
+
+let enviarMailConfirmacion = function(email, date, branch){
+    let optionEmail = {
+        hostname: 'localhost',
+        port: config.PORTNOTIFICACIONES,
+        method: 'POST',
+        path: '/api/notificacion',
+        headers:{'Content-Type': 'application/json'}
+    }
+
+    let a = new Date(date)
+    let fecha = a.getDay() +'/'+a.getMonth()+' a las '+a.getHours()+':'+a.getMinutes()
+
+    let bodyReq = {
+        'destinatario': email,
+        'asunto': 'Confirmacion Reserva',
+        'cuerpo': 'Su turno fue confirmado para el dia ' + fecha + ' en la sucursal numero '+ branch
+    }
+
+    return new Promise((resolve, reject) =>{
+        let req = http.request(optionEmail, (response)=>{
+            let body = ''
+            response.on('data', (data)=>{
+                body += data
+            })
+
+            response.on('end', (data)=>{
+                //body += data
+                if(response.statusCode == config.SUCCESCODE){
+                    resolve('ok')
+                }else{
+                    reject(JSON.parse(body))
+                }
+            })
+        })
+        req.write(JSON.stringify(bodyReq))
+        req.end()
+    })
+}
+
+let confirmoReserva = function(idReserva, idUser, email){
+
+    return new Promise((resolve, reject)=>{
+        let jsonReservas= actualizaJson()
+        let i=0
+        while(i<jsonReservas.length && jsonReservas[i].id != idReserva){
+            i++
+        }
+        if(i< jsonReservas.length){
+            if(jsonReservas[i].status == 1 && jsonReservas[i].userId == idUser){
+                jsonReservas[i].status = 2
+                jsonReservas[i].email = email
+                escribirJson(jsonReservas)
+                enviarMailConfirmacion(email, jsonReservas[i].dateTime, jsonReservas[i].branchId)
+                .then((response)=>{
+                    resolve(true) //se mando el mail correctamente
+                }).catch((response)=>{
+                    resolve(false) //no se mando el mail correctamente
+                })
+            }else{
+                //reserva mal confirmada
+                reject({messageError:'Reserva no pudo ser confirmada'})
+            }
+        }else{
+            //reserva no encontrada
+            reject({messageError:'Reserva no encontrada para ser confirmada'})
+        }
+    })
+}
+
+let escribirJson = function (json){
+    fs.writeFileSync('./reservas.json', JSON.stringify(json))
+}
+
 var myVar = (request, response) => {
     console.log('2) Socket connected');
+    let body= ''
     let path = request.method
     let url = request.url
     let query = url.indexOf('?') != -1? url.substring(url.indexOf('?')):null //me fijo si tiene query el url y la separo
@@ -105,47 +216,103 @@ var myVar = (request, response) => {
     console.log(path)
     url= url.split('/')
     response.setHeader("Content-Type","application/json")
+    
+    request.on('data', (data)=>{
+        body += data
+    })
 
-    if(url[0]== 'api' && url[1]=='reservas'){
-        switch(path){
-            case 'GET':
-                if(url.length == 3){
-                    //viene un id de una reserva, hay que devolver la reserva esa
+    request.on('end', (data)=>{
+        //body += data
+        if(url[0]== 'api' && url[1]=='reservas'){
+            switch(path){
+                case 'GET':
+                    if(url.length == 3){
+                        //viene un id de una reserva, hay que devolver la reserva esa
 
-                    let respuesta = buscaReservaPorId(url[2])
-                    if(respuesta != null){
-                        response.writeHead(200)
-                        response.end(JSON.stringify(respuesta))
+                        let respuesta = buscaReservaPorId(url[2])
+                        if(respuesta != null){
+                            response.writeHead(config.SUCCESCODE)
+                            response.end(JSON.stringify(respuesta))
+                        }else{
+                            response.writeHead(config.SERVICEERROR)
+                            res={messageError:'reserva no encontrada'}
+                            response.end(JSON.stringify(res))
+                        }
                     }else{
-                        response.writeHead(400)
-                        res={messageError:'reserva no encontrada'}
-                        response.end(JSON.stringify(res))
+                        //pueden venir query params, filtrar reservas y devolverlas
+                        if(query != null){
+                            query = new URLSearchParams(query)
+                            let branchId = query.get('branchId')
+                            let userId = query.get('userID')
+                            let date = query.get('dateTime')
+                            userId= userId == null? -1: userId
+                            let respuesta = buscaReservaLibre(userId, branchId, date)
+                            response.writeHead(config.SUCCESCODE)
+                            response.end(JSON.stringify(respuesta))
+                        }else{
+                            let respuesta = buscaReservaLibre(null, null, null)
+                            response.writeHead(config.SUCCESCODE)
+                            response.end(JSON.stringify(respuesta))
+                        }
                     }
-                }else{
-                    //pueden venir query params, filtrar reservas y devolverlas
-                    if(query != null){
-                        query = new URLSearchParams(query)
-                        let branchId = query.get('branchId')
-                        let userId = query.get('userID')
-                        let date = query.get('dateTime')
-                        let respuesta = buscaReservaLibre(userId, branchId, date)
-                        response.writeHead(200)
-                        response.end(JSON.stringify(respuesta))
+                    break;
+                case 'POST':
+                    body = JSON.parse(body)
+                    if(url.length == 4){
+                        //url correcta
+                        switch(url[2]){
+                            case 'solicitar':
+                                let  sol = solicitaReserva(url[3], body.userId)
+                                if(sol == true){
+                                    response.writeHead(config.SUCCESCODE)
+                                    response.end()
+                                }else{
+                                    response.writeHead(config.SERVICEERROR)
+                                    let res={messageError:'no fue posible reservar su turno'}
+                                    response.end(JSON.stringify(res))
+                                }
+                                break;
+                            case 'confirmar':
+                                confirmoReserva(url[3],body.userId,body.email)
+                                .then((value)=>{
+                                    //se confirmo la reserva
+                                    response.writeHead(config.SUCCESCODE)
+                                    let res;
+                                    if(value == true){
+                                        //se envio el mail
+                                        res = {message:'ok'}
+                                    }else{
+                                        //no se envio el mail
+                                        res={message:'Reserva confirmada, no se pudo enviar el mail'}
+                                    }
+                                    response.end(JSON.stringify(res))
+                                })
+                                .catch((res)=>{
+                                    //reserva no se pudo confirmar
+                                    response.writeHead(config.SERVICEERROR)
+                                    response.end(JSON.stringify(res))
+                                })
+                                break;
+                            default:
+                                //error de url
+                                response.writeHead(config.SERVICEERROR)
+                                response.end(JSON.stringify({messageError:'Servicio no encontrado'}))
+                                break;
+                        } 
                     }else{
-                        let respuesta = buscaReservaLibre(null, null, null)
-                        response.writeHead(200)
-                        response.end(JSON.stringify(respuesta))
+                        //url incorrecta
+                        response.writeHead(config.SERVICEERROR)
+                        response.end(JSON.stringify({messageError:'servicio no encontrado'}))
                     }
-                }
-                break;
-            case 'POST':
-                break;
-            case 'DELETE':
+                    break;
+                case 'DELETE':
 
-                break
-            default:
+                    break
+                default:
+            }
         }
-    }
+
+    })
 
     /*response.setHeader("Content-Type","application/json")
     response.writeHead(200)
@@ -154,6 +321,6 @@ var myVar = (request, response) => {
 
 const server = http.createServer(myVar);
 
-server.listen(port, function() {
+server.listen(config.PORTRESERVAS, function() {
   console.log('1) Server started');
 });
