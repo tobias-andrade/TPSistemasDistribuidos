@@ -1,9 +1,17 @@
 const http = require('http');
-/*
+const config = require('../config.json')
 
-PARTE PARA PROBAR SENDGRID ---- DEJE COMENTADA PARA PROBAR SUCURSALES
 
-const request = http.request('http://localhost:8081', { method: 'POST' , path: '/api/send'}, function (response) {
+//PARTE PARA PROBAR SENDGRID ---- DEJE COMENTADA PARA PROBAR SUCURSALES
+
+let option={
+  hostname: 'localhost',
+  port: config.PORTNOTIFICACIONES,
+  method: 'POST',
+  path: '/api/notificacion',
+  headers: {'Content-Type': 'application/json'}
+}
+const request = http.request(option, function (response) {
 
 console.log(response.url)
 console.log(response.statusCode)
@@ -14,7 +22,8 @@ console.log(response.headers)
     body += chunk;
   });
 
-  response.on('end', () => {
+  response.on('end', (data) => {
+    //body+=data
     body = JSON.parse(body)
 
     console.log(body);
@@ -35,12 +44,12 @@ request.write(JSON.stringify(json));
 
 request.end();
 
-*/
 
+/*
 
 let optionsGetSucursales = {
   hostname: 'localhost',
-  port: 8080,
+  port: config.PORTSUCURSALES,
   method: 'GET',
   path: '/api/sucursales',
   headers: { "Content-Type": "application/json" }
@@ -79,6 +88,7 @@ const server = http.createServer((request, response) => {
 });
 
 
-server.listen(8085, function () {
+server.listen(config.portApigateway, function () {
   console.log(`Server started on port: ${8085}`);
 });
+*/
