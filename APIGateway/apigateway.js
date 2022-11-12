@@ -1,7 +1,7 @@
 const http = require('http');
 const config = require('../config.json')
 
-
+/*
 //PARTE PARA PROBAR SENDGRID ---- DEJE COMENTADA PARA PROBAR SUCURSALES
 
 let option={
@@ -43,9 +43,9 @@ let json={
 request.write(JSON.stringify(json));
 
 request.end();
+*/
 
 
-/*
 
 let optionsGetSucursales = {
   hostname: 'localhost',
@@ -88,7 +88,6 @@ const server = http.createServer((request, response) => {
 });
 
 
-server.listen(config.portApigateway, function () {
-  console.log(`Server started on port: ${8085}`);
+server.listen(config.PORTAPIGATEWAY, function () {
+  console.log(`Server started on port: ${config.PORTAPIGATEWAY}`);
 });
-*/

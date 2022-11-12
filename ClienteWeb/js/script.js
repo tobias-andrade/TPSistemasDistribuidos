@@ -57,7 +57,7 @@ function getSucursales(method,url){
     const promise = new Promise((resolve,reject) => {
         let xhr = new XMLHttpRequest();
 
-        xhr.open("GET", "http://localhost:8085/api/sucursales");
+        xhr.open("GET", "http://localhost:8082/api/sucursales");
 
 
         xhr.responseType = 'json';
