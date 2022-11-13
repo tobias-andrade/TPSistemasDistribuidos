@@ -3,7 +3,7 @@ const fs = require('fs');
 const http = require('http');
 const { json } = require('stream/consumers');
 const config= require('../config.json')
-const TIEMPOBLOQUEADO = 600000
+const TIEMPOBLOQUEADO = 60000
 
 class Reserva {
     constructor(id, dateTime, userId, email, branchId) {
@@ -42,7 +42,8 @@ let buscaReservaPorId = function(id){
         i++
     }
     if(i<jsonReservas.length){
-        res={id:jsonReservas[i].id, dateTime: jsonReservas[i].dateTime, branchId: jsonReservas[i].branchId}
+        //res={id:jsonReservas[i].id, dateTime: jsonReservas[i].dateTime, branchId: jsonReservas[i].branchId}
+        res=jsonReservas[i]
     }else{
         res = null
     }
@@ -53,7 +54,7 @@ let buscaReservaLibre = function(userId, branchId, dateTime){
     
     let res = []
     let date = dateTime? new Date(dateTime): null
-    console.log(date)
+    //console.log(date)
     let jsonReservas= actualizaJson()
     for(let i=0; i<jsonReservas.length; i++){
         if(jsonReservas[i].userId == userId && ((userId==-1 && jsonReservas[i].status == 0) || (userId>=0 && jsonReservas[i].status == 2))){
@@ -113,13 +114,14 @@ let solicitaReserva = function(idReserva, idUser){
             setTimeout(function(id){
                 let reservas = actualizaJson()
                 let j=0
-                while(j<reservas.length && reservas[j] != id){
+                while(j<reservas.length && reservas[j].id != id){
                     j++
                 }
                 if(reservas[j].status == 1){
                     //no se confirmo, debo desbloquear la reserva
                     reservas[j].userId=-1
                     reservas[j].status=0
+                    console.log('RESERVA NO CONFIRMADA, SE VUELVE ATRAS')
                     escribirJson(reservas)
                 }
             }, TIEMPOBLOQUEADO, idReserva)
@@ -142,7 +144,7 @@ let enviarMailConfirmacion = function(email, date, branch){
     }
 
     let a = new Date(date)
-    let fecha = a.getDay() +'/'+a.getMonth()+' a las '+a.getHours()+':'+a.getMinutes()
+    let fecha = a.getDate() +'/'+(a.getMonth()+1)+' a las '+a.getHours()+':'+a.getMinutes()
 
     let bodyReq = {
         'destinatario': email,
@@ -159,7 +161,7 @@ let enviarMailConfirmacion = function(email, date, branch){
 
             response.on('end', (data)=>{
                 //body += data
-                if(response.statusCode == config.SUCCESCODE){
+                if(response.statusCode == config.SUCCESSCODE){
                     resolve('ok')
                 }else{
                     reject(JSON.parse(body))
@@ -231,7 +233,7 @@ var myVar = (request, response) => {
 
                         let respuesta = buscaReservaPorId(url[2])
                         if(respuesta != null){
-                            response.writeHead(config.SUCCESCODE)
+                            response.writeHead(config.SUCCESSCODE)
                             response.end(JSON.stringify(respuesta))
                         }else{
                             response.writeHead(config.SERVICEERROR)
@@ -243,15 +245,16 @@ var myVar = (request, response) => {
                         if(query != null){
                             query = new URLSearchParams(query)
                             let branchId = query.get('branchId')
-                            let userId = query.get('userID')
+                            let userId = query.get('userId')
                             let date = query.get('dateTime')
                             userId= userId == null? -1: userId
                             let respuesta = buscaReservaLibre(userId, branchId, date)
-                            response.writeHead(config.SUCCESCODE)
+                            response.writeHead(config.SUCCESSCODE)
                             response.end(JSON.stringify(respuesta))
                         }else{
-                            let respuesta = buscaReservaLibre(null, null, null)
-                            response.writeHead(config.SUCCESCODE)
+                            //let respuesta = buscaReservaLibre(-1, null, null)
+                            let respuesta = actualizaJson()
+                            response.writeHead(config.SUCCESSCODE)
                             response.end(JSON.stringify(respuesta))
                         }
                     }
@@ -264,7 +267,7 @@ var myVar = (request, response) => {
                             case 'solicitar':
                                 let  sol = solicitaReserva(url[3], body.userId)
                                 if(sol == true){
-                                    response.writeHead(config.SUCCESCODE)
+                                    response.writeHead(config.SUCCESSCODE)
                                     response.end()
                                 }else{
                                     response.writeHead(config.SERVICEERROR)
@@ -276,7 +279,7 @@ var myVar = (request, response) => {
                                 confirmoReserva(url[3],body.userId,body.email)
                                 .then((value)=>{
                                     //se confirmo la reserva
-                                    response.writeHead(config.SUCCESCODE)
+                                    response.writeHead(config.SUCCESSCODE)
                                     let res;
                                     if(value == true){
                                         //se envio el mail

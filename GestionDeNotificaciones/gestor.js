@@ -1,7 +1,5 @@
 const http = require('http')
 const https = require('node:https')
-const sgMail = require('@sendgrid/mail')
-sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 const config = require('../config.json')
 
 
@@ -43,7 +41,7 @@ var option = (request, response)=> {
             sendEmail(body['destinatario'], body['asunto'], body['cuerpo'])
             .then((value)=>{
               //email enviado
-                response.writeHead(config.SUCCESCODE)
+                response.writeHead(config.SUCCESSCODE)
                 response.end(JSON.stringify({message:'mail enviado'}))
               
             })
