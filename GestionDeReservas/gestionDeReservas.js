@@ -38,7 +38,7 @@ let buscaReservaPorId = function(id){
     let res={}
     let i=0
     let jsonReservas= actualizaJson()
-    while(i<jsonReservas.length && jsonReservas[i].id != id){
+    while(i<jsonReservas.length && jsonReservas[i].idReserva != id){
         i++
     }
     if(i<jsonReservas.length){
@@ -51,7 +51,7 @@ let buscaReservaPorId = function(id){
 }
 
 let buscaReservaLibre = function(userId, branchId, dateTime){
-    
+
     let res = []
     let date = dateTime? new Date(dateTime): null
     //console.log(date)
@@ -78,7 +78,7 @@ let buscaReservaLibre = function(userId, branchId, dateTime){
                         res.push(jsonReservas[i])
                     }
                 }else{
-                    //no se filtra por bracnid, ni fecha, pero coincide en userid 
+                    //no se filtra por bracnid, ni fecha, pero coincide en userid
                     res.push(jsonReservas[i])
                 }
             }
@@ -92,8 +92,8 @@ let eliminaReserva = function(id){
     let jsonReservas = actualizaJson()
     let res;
     for(let i=0;i<jsonReservas.length; i++){
-        if(jsonReservas[i].id == id && jsonReservas[i].userId != null && jsonReservas[i].email != null){
-            
+        if(jsonReservas[i].idReserva == id && jsonReservas[i].userId != null && jsonReservas[i].email != null){
+
         }
     }
 }
@@ -102,11 +102,11 @@ let solicitaReserva = function(idReserva, idUser){
     let jsonReservas = actualizaJson()
     let res;
     let i=0;
-    while(i<jsonReservas.length && jsonReservas[i].id!=idReserva ){
+    while(i<jsonReservas.length && jsonReservas[i].idReserva!=idReserva ){
         i++
     }
     if(i<jsonReservas.length){
-        if(jsonReservas[i].id == idReserva && jsonReservas[i].status == 0 && jsonReservas[i].userId == -1){
+        if(jsonReservas[i].idReserva == idReserva && jsonReservas[i].status == 0 && jsonReservas[i].userId == -1){
             //actualizo json con un 1 en status y activo timer
             jsonReservas[i].status=1
             jsonReservas[i].userId=idUser
@@ -114,7 +114,7 @@ let solicitaReserva = function(idReserva, idUser){
             setTimeout(function(id){
                 let reservas = actualizaJson()
                 let j=0
-                while(j<reservas.length && reservas[j].id != id){
+                while(j<reservas.length && reservas[j].idReserva != id){
                     j++
                 }
                 if(reservas[j].status == 1){
@@ -178,7 +178,7 @@ let confirmoReserva = function(idReserva, idUser, email){
     return new Promise((resolve, reject)=>{
         let jsonReservas= actualizaJson()
         let i=0
-        while(i<jsonReservas.length && jsonReservas[i].id != idReserva){
+        while(i<jsonReservas.length && jsonReservas[i].idReserva != idReserva){
             i++
         }
         if(i< jsonReservas.length){
@@ -218,7 +218,7 @@ var myVar = (request, response) => {
     console.log(path)
     url= url.split('/')
     response.setHeader("Content-Type","application/json")
-    
+
     request.on('data', (data)=>{
         body += data
     })
@@ -254,8 +254,8 @@ var myVar = (request, response) => {
                         }else{
                             //let respuesta = buscaReservaLibre(-1, null, null)
                             let respuesta = actualizaJson()
-                            response.writeHead(config.SUCCESSCODE)
-                            response.end(JSON.stringify(respuesta))
+                            response.writeHead(config.SUCCESSCODE);
+                            response.end(JSON.stringify(respuesta));
                         }
                     }
                     break;
@@ -301,7 +301,7 @@ var myVar = (request, response) => {
                                 response.writeHead(config.SERVICEERROR)
                                 response.end(JSON.stringify({messageError:'Servicio no encontrado'}))
                                 break;
-                        } 
+                        }
                     }else{
                         //url incorrecta
                         response.writeHead(config.SERVICEERROR)
