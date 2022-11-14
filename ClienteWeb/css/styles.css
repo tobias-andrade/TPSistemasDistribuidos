@@ -6,6 +6,7 @@ body {
     background-size: 5vmin 5vmin;
     background-color: rgb(88, 189, 219);
     display: grid;
+    font-size: 20px;
 }
 
 .div-registro {
