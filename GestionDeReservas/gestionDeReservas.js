@@ -3,17 +3,8 @@ const fs = require('fs');
 const http = require('http');
 const { json } = require('stream/consumers');
 const config= require('../config.json')
-const TIEMPOBLOQUEADO = 60000
 
-class Reserva {
-    constructor(id, dateTime, userId, email, branchId) {
-        this.id = id;
-        this.dateTime = dateTime;
-        this.userId = userId;
-        this.email = email;
-        this.branchId = branchId;
-    }
-}
+const TIEMPOBLOQUEADO = config.TIEMPO_CONFIRMACION_RESERVA;
 
 let buscaReserva =  (branchId, dateTime) => {
     let jsonReservas= actualizaJson()
@@ -42,7 +33,6 @@ let buscaReservaPorId = function(id){
         i++
     }
     if(i<jsonReservas.length){
-        //res={id:jsonReservas[i].id, dateTime: jsonReservas[i].dateTime, branchId: jsonReservas[i].branchId}
         res=jsonReservas[i]
     }else{
         res = null
@@ -51,10 +41,8 @@ let buscaReservaPorId = function(id){
 }
 
 let buscaReservaLibre = function(userId, branchId, dateTime){
-
     let res = []
     let date = dateTime? new Date(dateTime): null
-    //console.log(date)
     let jsonReservas= actualizaJson()
     for(let i=0; i<jsonReservas.length; i++){
         if(jsonReservas[i].userId == userId && ((userId==-1 && jsonReservas[i].status == 0) || (userId>=0 && jsonReservas[i].status == 2))){
@@ -84,7 +72,7 @@ let buscaReservaLibre = function(userId, branchId, dateTime){
             }
         }
     }
-    return res
+    return res;
 }
 
 let eliminaReserva = function(id){
@@ -209,14 +197,14 @@ let escribirJson = function (json){
 
 var myVar = (request, response) => {
     console.log('2) Socket connected');
-    let body= ''
-    let path = request.method
-    let url = request.url
-    let query = url.indexOf('?') != -1? url.substring(url.indexOf('?')):null //me fijo si tiene query el url y la separo
-    url = query != null? url.substring(1, url.indexOf('?')): url.substring(1) //si tiene query lo separo y sino lo unico le saco la / de adelante
-    console.log(url)
-    console.log(path)
-    url= url.split('/')
+    let body= '';
+    let method = request.method;
+    let url = request.url;
+    let query = url.indexOf('?') != -1? url.substring(url.indexOf('?')):null; //me fijo si tiene query el url y la separo
+    let path = query != null? url.substring(1, url.indexOf('?')): url.substring(1); //si tiene query lo separo y sino lo unico le saco la / de adelante
+    console.log(path);
+    console.log(method);
+    path= path.split('/');
     response.setHeader("Content-Type","application/json")
 
     request.on('data', (data)=>{
@@ -224,20 +212,18 @@ var myVar = (request, response) => {
     })
 
     request.on('end', (data)=>{
-        //body += data
-        if(url[0]== 'api' && url[1]=='reservas'){
-            switch(path){
+        if(path[0]== 'api' && path[1]=='reservas'){
+            switch(method){
                 case 'GET':
-                    if(url.length == 3){
+                    if(path.length == 3){
                         //viene un id de una reserva, hay que devolver la reserva esa
-
-                        let respuesta = buscaReservaPorId(url[2])
+                        let respuesta = buscaReservaPorId(path[2])
                         if(respuesta != null){
                             response.writeHead(config.SUCCESSCODE)
                             response.end(JSON.stringify(respuesta))
                         }else{
                             response.writeHead(config.SERVICEERROR)
-                            res={messageError:'reserva no encontrada'}
+                            res={messageError:'Reserva no encontrada'}
                             response.end(JSON.stringify(res))
                         }
                     }else{
@@ -252,7 +238,6 @@ var myVar = (request, response) => {
                             response.writeHead(config.SUCCESSCODE)
                             response.end(JSON.stringify(respuesta))
                         }else{
-                            //let respuesta = buscaReservaLibre(-1, null, null)
                             let respuesta = actualizaJson()
                             response.writeHead(config.SUCCESSCODE);
                             response.end(JSON.stringify(respuesta));
@@ -261,22 +246,22 @@ var myVar = (request, response) => {
                     break;
                 case 'POST':
                     body = JSON.parse(body)
-                    if(url.length == 4){
-                        //url correcta
-                        switch(url[2]){
+                    if(path.length == 4){
+                        //path correcto
+                        switch(path[2]){
                             case 'solicitar':
-                                let  sol = solicitaReserva(url[3], body.userId)
+                                let  sol = solicitaReserva(path[3], body.userId)
                                 if(sol == true){
                                     response.writeHead(config.SUCCESSCODE)
                                     response.end()
                                 }else{
                                     response.writeHead(config.SERVICEERROR)
-                                    let res={messageError:'no fue posible reservar su turno'}
+                                    let res={messageError:'No fue posible reservar su turno'}
                                     response.end(JSON.stringify(res))
                                 }
                                 break;
                             case 'confirmar':
-                                confirmoReserva(url[3],body.userId,body.email)
+                                confirmoReserva(path[3],body.userId,body.email)
                                 .then((value)=>{
                                     //se confirmo la reserva
                                     response.writeHead(config.SUCCESSCODE)
@@ -297,30 +282,24 @@ var myVar = (request, response) => {
                                 })
                                 break;
                             default:
-                                //error de url
+                                //error de path
                                 response.writeHead(config.SERVICEERROR)
                                 response.end(JSON.stringify({messageError:'Servicio no encontrado'}))
                                 break;
                         }
                     }else{
-                        //url incorrecta
+                        //path incorrecto
                         response.writeHead(config.SERVICEERROR)
-                        response.end(JSON.stringify({messageError:'servicio no encontrado'}))
+                        response.end(JSON.stringify({messageError:'Servicio no encontrado'}))
                     }
                     break;
                 case 'DELETE':
-
                     break
                 default:
             }
         }
-
     })
-
-    /*response.setHeader("Content-Type","application/json")
-    response.writeHead(200)
-    response.end(JSON.stringify())*/
-}
+};
 
 const server = http.createServer(myVar);
 
