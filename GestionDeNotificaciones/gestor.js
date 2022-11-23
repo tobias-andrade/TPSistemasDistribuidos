@@ -43,16 +43,16 @@ var option = (request, response)=> {
               //email enviado
                 response.writeHead(config.SUCCESSCODE)
                 response.end(JSON.stringify({message:'mail enviado'}))
-              
+
             })
             .catch((value)=>{
               //email no enviado
               response.writeHead(config.SERVICEERROR)
                 let res ={errorMessage:'Mail no enviado'}
                 response.end(JSON.stringify(res))
-              
+
             })
-          
+
         }
       }else{
         response.writeHead(config.SERVICEERROR)
@@ -65,7 +65,6 @@ var option = (request, response)=> {
       response.end(JSON.stringify(res))
 
     }
-    //response.end(JSON.stringify(res))
   })
 }
 
@@ -78,7 +77,6 @@ server.listen(config.PORTNOTIFICACIONES, function() {
 
 let optionSendEmail = {
     hostname: 'api.sendgrid.com',
-    //port: 8080,
     method: 'POST',
     path: '/v3/mail/send',
     headers: {"Content-Type": "application/json", 'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`}
@@ -105,7 +103,7 @@ let sendEmail = function(destinatario, subject, contenido){
       "subject":subject
     }],
     "content": [{
-      "type": "text/plain", 
+      "type": "text/plain",
       "value": contenido
     }],
     "from":{
@@ -120,9 +118,3 @@ let sendEmail = function(destinatario, subject, contenido){
     request.end()
   })
 }
-/*curl --request POST \
---url https://api.sendgrid.com/v3/mail/send \
---header 'Authorization: Bearer <<YOUR_API_KEY>>' \
---header 'Content-Type: application/json' \
---data '{"personalizations":[{"to":[{"email":"john.doe@example.com","name":"John Doe"}],"subject":"Hello, World!"}],"content": [{"type": "text/plain", "value": "Heya!"}],"from":{"email":"sam.smith@example.com","name":"Sam Smith"},"reply_to":{"email":"sam.smith@example.com","name":"Sam Smith"}}'
-*/

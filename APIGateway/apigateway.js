@@ -2,52 +2,6 @@ const http = require('http');
 const { resolve } = require('path');
 const config = require('../config.json')
 
-/*
-//PARTE PARA PROBAR SENDGRID ---- DEJE COMENTADA PARA PROBAR SUCURSALES
-
-let option={
-  hostname: 'localhost',
-  port: config.PORTNOTIFICACIONES,
-  method: 'POST',
-  path: '/api/notificacion',
-  headers: {'Content-Type': 'application/json'}
-}
-const request = http.request(option, function (response) {
-
-console.log(response.url)
-console.log(response.statusCode)
-console.log(response.headers)
-  let body = ''
-
-  response.on('data', (chunk) => {
-    body += chunk;
-  });
-
-  response.on('end', (data) => {
-    //body+=data
-    body = JSON.parse(body)
-
-    console.log(body);
-  });
-
-  response.on('close', () => {
-      console.log('3) Connection closed');
-  });
-
-});
-
-let json={
-  destinatario: 'tobiaseltoti5@gmail.com',
-  asunto: 'nuevo mail',
-  cuerpo: 'hola hola'
-}
-request.write(JSON.stringify(json));
-
-request.end();
-*/
-
-
-
 let optionsGetSucursales = {
   hostname: 'localhost',
   port: config.PORTSUCURSALES,

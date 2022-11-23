@@ -49,8 +49,4 @@ const server = http.createServer( (request, response) => {
 
 server.listen(config.PORTSUCURSALES, function () {
   console.log(`Server started on port: ${config.PORTSUCURSALES}`);
-  //let asd = new Date();
-  //console.log(asd.toLocaleDateString('en-CA'));
-
-  //console.log(asd.toLocaleDateString().replaceAll("/","-"));
 });
