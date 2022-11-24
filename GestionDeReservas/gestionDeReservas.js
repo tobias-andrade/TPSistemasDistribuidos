@@ -250,6 +250,7 @@ var myVar = (request, response) => {
                         //path correcto
                         switch(path[2]){
                             case 'solicitar':
+                                if(body.userId){
                                 let  sol = solicitaReserva(path[3], body.userId)
                                 if(sol == true){
                                     response.writeHead(config.SUCCESSCODE)
@@ -259,8 +260,15 @@ var myVar = (request, response) => {
                                     let res={messageError:'No fue posible reservar su turno'}
                                     response.end(JSON.stringify(res))
                                 }
+                            }else{
+                                console.log(body.userId)
+                                response.writeHead(config.SERVICEERROR)
+                                let res ={messageError:'No fue posible reservar el turno, userid erroneo'}
+                                response.end(JSON.stringify(res))
+                            }
                                 break;
                             case 'confirmar':
+                                if(body.userId && body.email){
                                 confirmoReserva(path[3],body.userId,body.email)
                                 .then((value)=>{
                                     //se confirmo la reserva
@@ -280,6 +288,12 @@ var myVar = (request, response) => {
                                     response.writeHead(config.SERVICEERROR)
                                     response.end(JSON.stringify(res))
                                 })
+                            }else{
+                                console.log(body.userId)
+                                response.writeHead(config.SERVICEERROR)
+                                let res ={messageError:'No fue posible confirmar el turno, userid o email erroneo'}
+                                response.end(JSON.stringify(res))
+                            }
                                 break;
                             default:
                                 //error de path
