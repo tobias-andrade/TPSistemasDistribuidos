@@ -75,15 +75,28 @@ let buscaReservaLibre = function(userId, branchId, dateTime){
     return res;
 }
 
-let eliminaReserva = function(id){
+let eliminaReserva = function(id, userId){
 
     let jsonReservas = actualizaJson()
     let res;
-    for(let i=0;i<jsonReservas.length; i++){
-        if(jsonReservas[i].idReserva == id && jsonReservas[i].userId != null && jsonReservas[i].email != null){
+    let i=0
 
-        }
+    while(i<jsonReservas.length && (jsonReservas[i].idReserva != id || jsonReservas[i].status != 2 || jsonReservas[i].userId != userId)){
+        i++
     }
+    if(i<jsonReservas.length){
+        console.log(i)
+        console.log(id, userId)
+        console.log(jsonReservas[i])
+        jsonReservas[i].status=0
+        jsonReservas[i].userId=-1
+        jsonReservas[i].email = ""
+        escribirJson(jsonReservas)
+        return true;
+    }else{
+        return false;
+    }
+    
 }
 
 let solicitaReserva = function(idReserva, idUser){
@@ -308,6 +321,26 @@ var myVar = (request, response) => {
                     }
                     break;
                 case 'DELETE':
+                    body = JSON.parse(body)
+                    if(path.length == 3){
+                        if(body.userId!=null){
+                            let rsp = eliminaReserva(path[2], body.userId)
+                            if(rsp){
+                                response.writeHead(config.SUCCESSCODE)
+                                response.end(JSON.stringify({message:'reserva eliminada'}))
+                            }else{
+                                response.writeHead(config.SERVICEERROR)
+                                response.end(JSON.stringify({messageError: 'reserva no pudo ser eliminada'}))
+                            }
+                        }else{
+                            console.log(body.userId)
+                            response.writeHead(config.SERVICEERROR)
+                            response.end(JSON.stringify({messageError: 'reserva no pudo ser eliminada, userId en null'}))
+                        }
+                    }else{
+                        response.writeHead(config.SERVICEERROR)
+                        response.end(JSON.stringify({messageError: 'servicio no encontrado'}))
+                    }
                     break
                 default:
             }
