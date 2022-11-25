@@ -28,11 +28,20 @@ app.use(express.json({
 }))
 
 app.use((req, res, next) => {
+    
     res.header('Access-Control-Allow-Origin', '*')
     res.header("Access-Control-Allow-Methods", 
     "GET, POST, OPTIONS, DELETE")
-    req.header("Access-Control-Allow-Headers", 
+    res.header("Access-Control-Allow-Headers", 
     "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+
+    if (req.method == 'OPTIONS'){
+        res.header('Access-Control-Allow-Origin', '*')
+        res.header("Access-Control-Allow-Methods", 
+        "GET, POST, OPTIONS, DELETE")
+        res.header("Access-Control-Allow-Headers", 
+        "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    }
     next()
 })
 
@@ -109,6 +118,34 @@ let getReservas = function (url) {
                 }
             })
         })
+        req.end()
+    })
+}
+
+let deleteReservas = function (url, body) {
+
+    optionReservas.method = 'DELETE'
+    optionReservas.path = url
+
+    return new Promise((resolve, reject) => {
+        let req = http.request(optionReservas, (response) => {
+            let cuerpo = ''
+            response.on('data', (data) => {
+                cuerpo += data
+            })
+            response.on('end', () => {
+                if (cuerpo != '') {
+                    cuerpo = JSON.parse(cuerpo)
+                }
+                if (response.statusCode == 200) {
+                    resolve(cuerpo)
+                } else {
+                    reject(cuerpo)
+                }
+            })
+        })
+        console.log(JSON.stringify(body))
+        req.write(JSON.stringify(body))
         req.end()
     })
 }
@@ -197,8 +234,7 @@ app.post('/api/reservas/confirmar/*', checkJwt, (req, res) => {
 })
 
 app.delete('/api/reservas/*', checkJwt, (req, res) => {
-    //definir
-    postReservas(req.url, req.body)
+    deleteReservas(req.url, req.body)
         .then((resp) => {
             res.status(config.SUCCESSCODE)
             res.send(resp)
