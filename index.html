@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Reserva de turnos</title>
+    <link rel="stylesheet" href="./css/styles.css">
+    <script type="text/javascript" src="./js/script.js"></script>
+    <script src="./js/app.js"></script>
+    <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
+</head>
+
+<body>
+
+    <div class="login">
+        <h2>SPA Authentication Sample</h2>
+        <p>Welcome to our page!</p>
+        <button id="btn-login" disabled="true" onclick="login()">Log in</button>
+        <button id="btn-logout" disabled="true" onclick="logout()">Log out</button>
+    </div>
+    <div class="div-registro">
+        <h1>Reserve su turno</h1>
+
+        <div class="div-seleccion_sucursal">
+            <label for="sucursal">Seleccione una sucursal</label>
+            <form action="/api/reservas" method="GET">
+                <select name="sucursales" id="suc_selection">
+                    <option value="noValue">---Seleccione Sucursal---</option>
+                </select>
+            </form>
+        </div>
+
+        <br>
+
+
+        <div class="div-form_email">
+            <label for="email">Ingrese su E-mail</label><br>
+            <input type="email" id="email" placeholder="myEmail@example.com" size="30" required>
+        </div>
+
+        <br>
+
+        <div class="div-form_calendario">
+            <label for="calendario">Fecha de la reserva</label>
+            <input type="date" id="calendar" name="calendario" value="" min="" max="" required>
+        </div>
+
+        <br>
+
+        <div class="div-form_hora">
+            <label for="horas">Hora de la reserva</label>
+            <select name="hora" id="horas_disponibles" required>
+                <option value="noValue">------- -------</option>
+            </select>
+        </div>
+
+        <br>
+
+        <div class="div-form_buttons">
+            <input type="submit" value="Realizar Reserva" id="button_realizar" disabled="true">
+            <input type="submit" value="Confirmar Reserva" id="button_confirmar" disabled="true">
+        </div>
+
+    </div>
+
+    <iframe id="cartesMap" src="" width="1200" height="600" frameborder="0" allowfullscreen></iframe>
+</body>
+
+</html>
