@@ -18,9 +18,8 @@
     {
         "idReserva": 3,
         "dateTime": "2022-11-13T23:33:14.406Z",
-        "userId": -1,
         "email": "tobiaseltoti5@gmail.com",
         "branchId": 3,
-        "status": 0
+        "status": 1
     }
 ]

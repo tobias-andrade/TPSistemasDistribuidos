@@ -263,7 +263,7 @@ var myVar = (request, response) => {
                         //path correcto
                         switch (path[2]) {
                             case 'solicitar':
-                                if (body.userId !== null ) {
+                                if (body.userId != null) {
                                     let sol = solicitaReserva(path[3], body.userId)
                                     if (sol == true) {
                                         response.writeHead(config.SUCCESSCODE)
@@ -281,7 +281,7 @@ var myVar = (request, response) => {
                                 }
                                 break;
                             case 'confirmar':
-                                if (body.userId !== null && body.email) {
+                                if (body.userId != null && body.email) {
                                     confirmoReserva(path[3], body.userId, body.email)
                                         .then((value) => {
                                             //se confirmo la reserva
