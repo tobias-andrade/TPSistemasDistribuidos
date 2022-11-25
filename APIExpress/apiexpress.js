@@ -135,6 +135,7 @@ let postReservas = function (url, body) {
                 }
             })
         })
+        console.log(JSON.stringify(body))
         req.write(JSON.stringify(body))
         req.end()
     })
