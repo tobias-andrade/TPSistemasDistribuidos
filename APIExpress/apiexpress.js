@@ -29,6 +29,10 @@ app.use(express.json({
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*')
+    res.header("Access-Control-Allow-Methods", 
+    "GET, POST, OPTIONS, DELETE")
+    req.header("Access-Control-Allow-Headers", 
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization");
     next()
 })
 
@@ -136,7 +140,7 @@ let postReservas = function (url, body) {
     })
 }
 
-app.get('/api/sucursales(/*)?', checkJwt, (req, res) => {
+app.get('/api/sucursales(/*)?', (req, res) => {
     let url = req.url.split("/").filter(Boolean);
     if (url.length == 2)
         optionsGetSucursales.path = '/api/sucursales'

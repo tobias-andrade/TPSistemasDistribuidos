@@ -1,3 +1,5 @@
+document.addEventListener('DOMContentLoaded', function (e) {
+
 let auth0Client = null;
 
 var urlLogin = {
@@ -121,3 +123,5 @@ function createURL({ scheme, server, path, ...queryParams }) {
         url += "?" + param;
     return url;
 };
+
+})

@@ -1,4 +1,5 @@
 //Urls
+
 //-----------------------------------------
 var cartesMapUrl = {
     scheme: "https",
@@ -77,7 +78,7 @@ function getQueryParams(queryParams) {
     return params;
 };
 
-function sendRequest(method, url,body) {
+function sendRequest(method, url, body) {
     const promise = new Promise((resolve, reject) => {
         let xhr = new XMLHttpRequest();
         xhr.open(method, url);
@@ -91,7 +92,7 @@ function sendRequest(method, url,body) {
     return promise;
 };
 
-function sendRequestButton(method, url,body) {
+function sendRequestButton(method, url, body) {
     const promise = new Promise((resolve, reject) => {
         let xhr = new XMLHttpRequest();
         xhr.open(method, url);
@@ -104,6 +105,42 @@ function sendRequestButton(method, url,body) {
                 reject(xhr.response);
         }
         xhr.send(JSON.stringify(body));
+    });
+    return promise;
+};
+
+function sendRequestTokenButton(method, url, body, token) {
+    const promise = new Promise((resolve, reject) => {
+        // let xhr = new XMLHttpRequest();
+        // xhr.open(method, url);
+        // xhr.setRequestHeader('Accept', 'application/json')
+        // xhr.setRequestHeader('Authorization', 'Bearer ' + token)
+        // xhr.responseType = 'json';
+        // xhr.onload = () => {
+        //     if (xhr.status == 200)
+        //         resolve(xhr.response);
+        //     else
+        //         reject(xhr.response);
+        // }
+        // xhr.send(JSON.stringify(body));
+
+
+        let header = {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + token,
+          };
+
+        const request = fetch(url,{
+        method: method,
+        headers: header,
+        body: JSON.stringify(body)
+        }).then(res =>{
+            if(res.status == 200){
+              resolve()
+            }
+            else
+              alert("Hubo un problema, no se pudo solicitar la reserva")
+          })
     });
     return promise;
 };
@@ -152,7 +189,7 @@ function sucursalSelectionSetup() {
         if (select.value != "noValue") {
             calendar.style.visibility = "visible";
             button.disabled = true;
-        } else{
+        } else {
             calendar.style.visibility = "hidden";
         };
     });
@@ -169,19 +206,36 @@ function fechaSelectionSetup() {
     });
 }
 
-function buttonRealizarSetup(){
+function buttonRealizarSetup() {
     let button = document.getElementById("button_realizar");
     let email = document.getElementById("email");
     button.addEventListener("click", () => {
-        if (email.value != null){
+        let userId = window.sessionStorage.getItem('userId');
+        let token = window.sessionStorage.getItem('token');
+        let e = window.sessionStorage.getItem('email');
+        if (userId != null) {
+            verificacionTurnoUrl.server = 'localhost:'+ '8084'
             let idReserva = document.getElementById("horas_disponibles").value;
-            verificacionTurnoUrl.path = "api/reservas/solicitar/"+idReserva;
-            sendRequestButton("POST", createURL(verificacionTurnoUrl),{"userId": 0}).then((response) => {
-                    document.getElementById("button_confirmar").disabled = false;
-                    button.disabled = true;
-                    setTimeout( () => {
-                        document.getElementById("button_confirmar").disabled = true;
-                    }, TIEMPOBLOQUEADO)
+            verificacionTurnoUrl.path = "api/reservas/solicitar/" + idReserva;
+            sendRequestTokenButton("POST", createURL(verificacionTurnoUrl), { "userId": userId }, token).then((response) => {
+                document.getElementById("button_confirmar").disabled = false;
+                button.disabled = true;
+                setTimeout(() => {
+                    document.getElementById("button_confirmar").disabled = true;
+                }, TIEMPOBLOQUEADO)
+            }).catch(response => {
+                console.log(response);
+            });
+        } else if (email.value != null) {
+            verificacionTurnoUrl.server = 'localhost:'+ '8082'
+            let idReserva = document.getElementById("horas_disponibles").value;
+            verificacionTurnoUrl.path = "api/reservas/solicitar/" + idReserva;
+            sendRequestButton("POST", createURL(verificacionTurnoUrl), { "userId": 0 }).then((response) => {
+                document.getElementById("button_confirmar").disabled = false;
+                button.disabled = true;
+                setTimeout(() => {
+                    document.getElementById("button_confirmar").disabled = true;
+                }, TIEMPOBLOQUEADO)
             }).catch(response => {
                 console.log(response);
             });
@@ -189,23 +243,43 @@ function buttonRealizarSetup(){
     });
 };
 
-function buttonConfirmarSetup(){
+function buttonConfirmarSetup() {
     let button = document.getElementById("button_confirmar");
     button.addEventListener("click", () => {
-            let email = document.getElementById("email").value;
+        let userId = window.sessionStorage.getItem('userId');
+        let token = window.sessionStorage.getItem('token');
+        let e = window.sessionStorage.getItem('email');
+        if (userId != null) {
+            confirmacionTurnoUrl.server = 'localhost:'+ '8084'
             let idReserva = document.getElementById("horas_disponibles").value;
-            confirmacionTurnoUrl.path = "api/reservas/confirmar/"+idReserva;
-            sendRequestButton("POST", createURL(confirmacionTurnoUrl),{"userId": 0, "email":email}).then((response) => {
+            confirmacionTurnoUrl.path = "api/reservas/confirmar/" + idReserva;
+            sendRequestTokenButton("POST", createURL(confirmacionTurnoUrl), { "userId": userId, "email": e }, token).then((response) => {
                 console.log(response);
                 document.getElementById("button_confirmar").disabled = true;
             }).catch(response => {
                 console.log(response);
             });
+
+        } else {
+            confirmacionTurnoUrl.server = 'localhost:'+ '8082'
+            let email = document.getElementById("email").value;
+            let idReserva = document.getElementById("horas_disponibles").value;
+            confirmacionTurnoUrl.path = "api/reservas/confirmar/" + idReserva;
+            sendRequestButton("POST", createURL(confirmacionTurnoUrl), { "userId": 0, "email": email }).then((response) => {
+                console.log(response);
+                document.getElementById("button_confirmar").disabled = true;
+            }).catch(response => {
+                console.log(response);
+            });
+        }
     });
 };
 
-window.onload = () => {
+document.addEventListener('DOMContentLoaded', async function (e) {
+
+
     //sendRequest: Crea el mapa de cartes y "luego" retorna los datos de ese mapa
+    console.log('hola')
     sendRequest("POST", createURL(cartesMapUrl)).then(mapData => {
         let url = new URL(mapData.uuid + "/embed?type=map", "https://app.cartes.io/maps/");
         document.getElementById('cartesMap').src = url.href;
@@ -237,4 +311,132 @@ window.onload = () => {
     buttonRealizarSetup();
     buttonConfirmarSetup();
 
+    //------------------
+
+})
+
+//-----------------------------------------------------------------------------------
+
+let auth0Client = null;
+
+var urlLogin = {
+    scheme: "http",
+    server: "localhost:3000",
+    path: "api/login",
+    email: "",
+    token: ""
 };
+
+function Hash(email) {
+    var hash = 0;
+    if (email.length == 0) return hash;
+    for (i = 0; i < email.length; i++) {
+        char = email.charCodeAt(i);
+        hash = ((hash<<5)-hash)+char;
+        hash = hash & hash;
+    }
+    return (hash<0)?hash*-1:hash;
+}
+
+//const fetchAuthConfig = () => fetch("./auth_config.json");
+
+const configureClient = async () => {
+    //const response = await fetchAuthConfig();
+    //const config = await response.json();
+
+    const config = {
+        "domain": "dev-x02afyvyg3u7yzwq.us.auth0.com",
+        "clientId": "k5qWLrTMU9wZzmG0BImZ9370dfKrpgva",
+        "audience": "k5qWLrTMU9wZzmG0BImZ9370dfKrpgva"
+      }
+
+    auth0Client = await auth0.createAuth0Client({
+        domain: config.domain,
+        clientId: config.clientId
+    });
+};
+
+const login = async () => {
+    await auth0Client.loginWithRedirect({
+        authorizationParams: {
+            redirect_uri: window.location.origin
+        }
+    });
+};
+
+const logout = () => {
+    auth0Client.logout({
+        // logoutParams: {
+        //     returnTo: window.location.origin
+        // }
+    });
+    window.sessionStorage.removeItem('token')
+    window.sessionStorage.removeItem('email')
+    window.sessionStorage.removeItem('userId')
+};
+
+const updateUI = async () => {
+    const isAuthenticated = await auth0Client.isAuthenticated();
+
+    document.getElementById("btn-logout").disabled = !isAuthenticated;
+    document.getElementById("btn-login").disabled = isAuthenticated;
+
+    // NEW - add logic to show/hide gated content after authentication
+    if (isAuthenticated) {
+
+        // let user = await auth0Client.getUser()
+        // let token = await auth0Client.getTokenSilently()
+
+        // urlLogin.email = user.name
+        // urlLogin.token = token
+
+        // await fetch(createURL(urlLogin), {
+        //     method: "GET"
+        // })
+
+        // const data = await response.json()
+
+    } 
+};
+
+function createURL({ scheme, server, path, ...queryParams }) {
+    let url = `${scheme}://${server}/${path}`;
+    let param = new URLSearchParams(getQueryParams(queryParams)).toString();
+    if (param)
+        url += "?" + param;
+    return url;
+};
+
+window.onload = async () => {
+    await configureClient();
+
+    updateUI();
+
+    const isAuthenticated = await auth0Client.isAuthenticated();
+
+    if (isAuthenticated) {
+        // show the gated content
+        return;
+    }
+
+    // NEW - check for the code and state parameters
+    const query = window.location.search;
+    if (query.includes("code=") && query.includes("state=")) {
+
+        // Process the login state
+        let token = await auth0Client.handleRedirectCallback();
+
+        let sessionData = await auth0Client.getIdTokenClaims()
+
+        if (sessionData) {
+            window.sessionStorage.setItem('token', sessionData.__raw)
+            window.sessionStorage.setItem('email', sessionData.email)
+            window.sessionStorage.setItem('userId', Hash(sessionData.email))
+        }
+
+        updateUI();
+
+        // Use replaceState to redirect the user away and remove the querystring parameters
+        window.history.replaceState({}, document.title, "/");
+    }
+}
