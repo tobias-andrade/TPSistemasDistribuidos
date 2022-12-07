@@ -261,36 +261,42 @@ function buttonConfirmarSetup() {
     });
 };
 
-document.addEventListener('DOMContentLoaded', function (e) {
 
-    window.onload = async () => {
+//window.onload = async () => {
+        //sendRequest: Crea el mapa de cartes y "luego" retorna los datos de ese mapa
+       /* sendRequest("POST", createURL(cartesMapUrl)).then(mapData => {
+            let url = new URL(mapData.uuid + "/embed?type=map", "https://app.cartes.io/maps/");
+            document.getElementById('cartesMap').src = url.href;
+            console.log(mapData)
+            return mapData;
+        }).then(mapData => {
+            //sendRequest: Le pide a la apiGateWay las sucursales y "luego" crea los marcadores en el mapa
+            sendRequest("GET", createURL(sucursalesUrl)).then((sucursalesData) => {
+                let sel = document.getElementById("suc_selection");
+                cartesMarkerUrl.path = `${cartesMarkerUrl.path}/${mapData.uuid}/markers`;
+                sucursalesData.forEach(element => {
+                    //Personaliza el marcador
+                    cartesMarkerUrl.category_name = `${element['name']} | Id: ${element['branchId']}`;
+                    cartesMarkerUrl.lat = element['lat'];
+                    cartesMarkerUrl.lng = element['lng'];
+                    //sendRequest: Crea un marcador en el mapa de cartes
+                    sendRequest("POST", createURL(cartesMarkerUrl));
+                    //Llena lista desplegable para seleccionar sucursal
+                    let opt = document.createElement("option");
+                    opt.value = element['branchId'];
+                    opt.text = element['name'];
+                    sel.add(opt, null);
+                });
+            })
+        });*/
+    
+        
+//}
+
+document.addEventListener('DOMContentLoaded', async function (e) {
+    
+    //window.onload = async () => {
     //---------------------------
-
-    //sendRequest: Crea el mapa de cartes y "luego" retorna los datos de ese mapa
-    sendRequest("POST", createURL(cartesMapUrl)).then(mapData => {
-        let url = new URL(mapData.uuid + "/embed?type=map", "https://app.cartes.io/maps/");
-        document.getElementById('cartesMap').src = url.href;
-        return mapData;
-    }).then(mapData => {
-        //sendRequest: Le pide a la apiGateWay las sucursales y "luego" crea los marcadores en el mapa
-        sendRequest("GET", createURL(sucursalesUrl)).then((sucursalesData) => {
-            let sel = document.getElementById("suc_selection");
-            cartesMarkerUrl.path = `${cartesMarkerUrl.path}/${mapData.uuid}/markers`;
-            sucursalesData.forEach(element => {
-                //Personaliza el marcador
-                cartesMarkerUrl.category_name = `${element['name']} | Id: ${element['branchId']}`;
-                cartesMarkerUrl.lat = element['lat'];
-                cartesMarkerUrl.lng = element['lng'];
-                //sendRequest: Crea un marcador en el mapa de cartes
-                sendRequest("POST", createURL(cartesMarkerUrl));
-                //Llena lista desplegable para seleccionar sucursal
-                let opt = document.createElement("option");
-                opt.value = element['branchId'];
-                opt.text = element['name'];
-                sel.add(opt, null);
-            });
-        })
-    });
 
     calendarSetup();
     sucursalSelectionSetup();
@@ -306,9 +312,12 @@ document.addEventListener('DOMContentLoaded', function (e) {
     updateUI();
 
     const isAuthenticated = await auth0Client.isAuthenticated();
-
+    
     if (isAuthenticated) {
         // show the gated content
+        
+        document.getElementById("mis_reservas").style.display = "block"
+        
         return;
     }
 
@@ -331,7 +340,7 @@ document.addEventListener('DOMContentLoaded', function (e) {
 
         // Use replaceState to redirect the user away and remove the querystring parameters
         window.history.replaceState({}, document.title, "/");
-    }
+    //}
 
 }
 })
@@ -404,10 +413,10 @@ const updateUI = async () => {
 
     document.getElementById("btn-logout").disabled = !isAuthenticated;
     document.getElementById("btn-login").disabled = isAuthenticated;
-
     // NEW - add logic to show/hide gated content after authentication
     if (isAuthenticated) {
 
+        document.getElementById("mis_reservas").style.display = "block"
         // let user = await auth0Client.getUser()
         // let token = await auth0Client.getTokenSilently()
 

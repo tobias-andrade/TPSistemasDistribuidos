@@ -1,4 +1,4 @@
-const express = require("express");
+/*const express = require("express");
 const { join } = require("path");
 const app = express();
 
@@ -16,4 +16,4 @@ app.get("/*", (_, res) => {
 });
 
 // Listen on port 3000
-app.listen(3000, () => console.log("Application running on port 3000"));
+app.listen(3000, () => console.log("Application running on port 3000"));*/

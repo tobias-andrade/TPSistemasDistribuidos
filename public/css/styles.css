@@ -14,6 +14,12 @@ body {
     margin: 0 auto;
 }
 
+.mis_reservas {
+    
+    display: none;
+    
+}
+
 iframe {
     display: block;
     margin: 1% auto;
