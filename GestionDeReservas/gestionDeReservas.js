@@ -24,7 +24,6 @@ let actualizaJson = function () {
     return jsonReservas
 }
 
-
 let buscaReservaPorId = function (id) {
     let res = {}
     let i = 0
@@ -75,27 +74,26 @@ let buscaReservaLibre = function (userId, branchId, dateTime) {
     return res;
 }
 
-let eliminaReserva = function (id) {
+let eliminaReserva = function (id, userId) {
 
     let jsonReservas = actualizaJson()
     let res;
     let i = 0
 
-    while (i < jsonReservas.length && (jsonReservas[i].idReserva != id || jsonReservas[i].status != 2)) {
+    while (i < jsonReservas.length && (jsonReservas[i].idReserva != id || jsonReservas[i].status != 2 || jsonReservas[i].userId != userId)) {
         i++
     }
     if (i < jsonReservas.length) {
         console.log(i)
-        console.log(id)
+        console.log(id, userId)
         console.log(jsonReservas[i])
         jsonReservas[i].status = 0
-        let userId = jsonReservas[i].userId
         jsonReservas[i].userId = -1
         jsonReservas[i].email = ""
         escribirJson(jsonReservas)
-        return userId;
+        return true;
     } else {
-        return -5;
+        return false;
     }
 
 }
@@ -226,7 +224,6 @@ var myVar = (request, response) => {
     })
 
     request.on('end', (data) => {
-        console.log(body)
         if (path[0] == 'api' && path[1] == 'reservas') {
             switch (method) {
                 case 'GET':
@@ -265,7 +262,7 @@ var myVar = (request, response) => {
                         //path correcto
                         switch (path[2]) {
                             case 'solicitar':
-                                if (body.userId != null ) {
+                                if (body.userId != null) {
                                     let sol = solicitaReserva(path[3], body.userId)
                                     if (sol == true) {
                                         response.writeHead(config.SUCCESSCODE)
@@ -323,18 +320,22 @@ var myVar = (request, response) => {
                     }
                     break;
                 case 'DELETE':
-                    
+                    body = JSON.parse(body)
                     if (path.length == 3) {
-                        
-                            let rsp = eliminaReserva(path[2])
-                            if (rsp != -5) {
+                        if (body.userId != null) {
+                            let rsp = eliminaReserva(path[2], body.userId)
+                            if (rsp) {
                                 response.writeHead(config.SUCCESSCODE)
-                                response.end(JSON.stringify({ "userId": rsp, message: 'reserva eliminada' }))
+                                response.end(JSON.stringify({ message: 'reserva eliminada' }))
                             } else {
                                 response.writeHead(config.SERVICEERROR)
                                 response.end(JSON.stringify({ messageError: 'reserva no pudo ser eliminada' }))
                             }
-                        
+                        } else {
+                            console.log(body.userId)
+                            response.writeHead(config.SERVICEERROR)
+                            response.end(JSON.stringify({ messageError: 'reserva no pudo ser eliminada, userId en null' }))
+                        }
                     } else {
                         response.writeHead(config.SERVICEERROR)
                         response.end(JSON.stringify({ messageError: 'servicio no encontrado' }))

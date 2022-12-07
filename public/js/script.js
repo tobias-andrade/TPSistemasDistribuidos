@@ -368,9 +368,9 @@ const configureClient = async () => {
     //const config = await response.json();
 
     const config = {
-        "domain": "dev-x02afyvyg3u7yzwq.us.auth0.com",
-        "clientId": "k5qWLrTMU9wZzmG0BImZ9370dfKrpgva",
-        "audience": "k5qWLrTMU9wZzmG0BImZ9370dfKrpgva"
+        "domain": "dev-cy4wo1ttnkj1fm38.us.auth0.com",
+        "clientId": "zoBiu8GBTABl69ySRLNw983yMosGafV7",
+        "audience": "zoBiu8GBTABl69ySRLNw983yMosGafV7"
     }
 
     auth0Client = await auth0.createAuth0Client({
