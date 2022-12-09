@@ -1,4 +1,4 @@
-window.onload = () =>{
+/*window.onload = () =>{
     sendRequest("POST", createURL(cartesMapUrl)).then(mapData => {
         let url = new URL(mapData.uuid + "/embed?type=map", "https://app.cartes.io/maps/");
         document.getElementById('cartesMap').src = url.href;
@@ -24,4 +24,4 @@ window.onload = () =>{
             });
         })
     });
-}
+}*/

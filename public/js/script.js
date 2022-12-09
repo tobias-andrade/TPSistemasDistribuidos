@@ -34,6 +34,23 @@ var reservasUrl = {
     branchId: ""
 };
 
+var reservasUrlToken = {
+    scheme: "http",
+    server: "localhost:8084", //Debería leerse de alguna configuración, pero no se cómo todavía
+    path: "api/reservas",
+    userId: "",
+    dateTime: "",
+    branchId: ""
+};
+
+var reservasDeleteUrlToken = {
+    scheme: "http",
+    server: "localhost:8084", //Debería leerse de alguna configuración, pero no se cómo todavía
+    path: "api/reservas/delete",
+    userId: "",
+    reservaId: ""
+};
+
 var verificacionTurnoUrl = {
     scheme: "http",
     server: "localhost:8082",
@@ -88,6 +105,27 @@ function sendRequest(method, url, body) {
             resolve(xhr.response);
         }
         xhr.send(JSON.stringify(body));
+    });
+    return promise;
+};
+
+
+function sendRequestToken(method, url, token) {
+    const promise = new Promise((resolve, reject) => {
+        let header = {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + token,
+        };
+        const request = fetch(url, {
+            method: method,
+            headers: header,
+        }).then(res => {
+            if (res.status == 200) {
+                resolve(res.json())
+            }
+            else
+                console.log(res.status)
+        })
     });
     return promise;
 };
@@ -199,7 +237,7 @@ function buttonRealizarSetup() {
         let userId = window.sessionStorage.getItem('userId');
         let token = window.sessionStorage.getItem('token');
         let e = window.sessionStorage.getItem('email');
-        if (userId != null) {
+        if (userId !== null) {
             verificacionTurnoUrl.server = 'localhost:' + '8084'
             let idReserva = document.getElementById("horas_disponibles").value;
             verificacionTurnoUrl.path = "api/reservas/solicitar/" + idReserva;
@@ -212,7 +250,7 @@ function buttonRealizarSetup() {
             }).catch(response => {
                 console.log(response);
             });
-        } else if (email.value != null) {
+        } else if (email.value !== null) {
             verificacionTurnoUrl.server = 'localhost:' + '8082'
             let idReserva = document.getElementById("horas_disponibles").value;
             verificacionTurnoUrl.path = "api/reservas/solicitar/" + idReserva;
@@ -235,13 +273,16 @@ function buttonConfirmarSetup() {
         let userId = window.sessionStorage.getItem('userId');
         let token = window.sessionStorage.getItem('token');
         let e = window.sessionStorage.getItem('email');
+
         if (userId != null) {
+
             confirmacionTurnoUrl.server = 'localhost:' + '8084'
             let idReserva = document.getElementById("horas_disponibles").value;
             confirmacionTurnoUrl.path = "api/reservas/confirmar/" + idReserva;
             sendRequestTokenButton("POST", createURL(confirmacionTurnoUrl), { "userId": userId, "email": e }, token).then((response) => {
-                console.log(response);
+                //console.log(response);
                 document.getElementById("button_confirmar").disabled = true;
+                listaTurnosSetup();
             }).catch(response => {
                 console.log(response);
             });
@@ -262,9 +303,56 @@ function buttonConfirmarSetup() {
 };
 
 
-//window.onload = async () => {
+function listaTurnosSetup() {
+    let userId = window.sessionStorage.getItem('userId');
+    let token = window.sessionStorage.getItem('token');
+    reservasUrlToken.userId = userId;
+    sendRequestToken("GET", createURL(reservasUrlToken), token).then((reservasData) => {
+        let sel = document.getElementById("reservas_realizadas");
+        removeOptionsFromSelect(sel);
+        reservasData.forEach(element => {
+            //Llena lista desplegable
+            let date = new Date(element['dateTime']);
+            let time = date.toLocaleTimeString();
+            let day = date.getDate();
+            let month = date.getMonth();
+            let year = date.getFullYear();
+            let opt = document.createElement("option");
+            opt.value = element['idReserva'];
+            opt.text = 'Fecha:' + day + '/' + month + '/' + year + ' Hora:' + time;
+            sel.add(opt, null);
+        });
+    })
+}
+
+//terminar ...
+
+function buttonDeleteSetup() {
+    let button = document.getElementById("button_eliminar");
+    button.disabled = false;  
+    button.addEventListener("click", () => {
+        let userId = window.sessionStorage.getItem('userId');
+        let token = window.sessionStorage.getItem('token');
+        let idReserva = document.getElementById("reservas_realizadas").value
+        reservasDeleteUrlToken.userId = userId;
+        reservasDeleteUrlToken.reservaId = idReserva //obtener id de reserva
+        sendRequestToken("DELETE", createURL(reservasDeleteUrlToken), token).then((response) => {
+            console.log(response);
+            alert("Reserva eliminada correctamente");
+            listaTurnosSetup();
+        }).catch(response => {
+            console.log(response);
+        });
+    })
+}
+
+
+
+document.addEventListener('DOMContentLoaded', async function (e) {
+
+    window.onload = async () => {
         //sendRequest: Crea el mapa de cartes y "luego" retorna los datos de ese mapa
-       /* sendRequest("POST", createURL(cartesMapUrl)).then(mapData => {
+        sendRequest("POST", createURL(cartesMapUrl)).then(mapData => {
             let url = new URL(mapData.uuid + "/embed?type=map", "https://app.cartes.io/maps/");
             document.getElementById('cartesMap').src = url.href;
             console.log(mapData)
@@ -288,21 +376,18 @@ function buttonConfirmarSetup() {
                     sel.add(opt, null);
                 });
             })
-        });*/
-    
-        
-//}
+        });
+        calendarSetup();
+        sucursalSelectionSetup();
+        fechaSelectionSetup();
+        buttonRealizarSetup();
+        buttonConfirmarSetup();
+        buttonDeleteSetup();
 
-document.addEventListener('DOMContentLoaded', async function (e) {
-    
-    //window.onload = async () => {
+    }
     //---------------------------
 
-    calendarSetup();
-    sucursalSelectionSetup();
-    fechaSelectionSetup();
-    buttonRealizarSetup();
-    buttonConfirmarSetup();
+
 
     //------------------
 
@@ -312,12 +397,13 @@ document.addEventListener('DOMContentLoaded', async function (e) {
     updateUI();
 
     const isAuthenticated = await auth0Client.isAuthenticated();
-    
+
     if (isAuthenticated) {
         // show the gated content
-        
-        document.getElementById("mis_reservas").style.display = "block"
-        
+
+        document.getElementById("mis_reservas").style.display = "block";
+        //listaTurnosSetup();
+
         return;
     }
 
@@ -340,9 +426,9 @@ document.addEventListener('DOMContentLoaded', async function (e) {
 
         // Use replaceState to redirect the user away and remove the querystring parameters
         window.history.replaceState({}, document.title, "/");
-    //}
+        //}
 
-}
+    }
 })
 
 
@@ -417,6 +503,7 @@ const updateUI = async () => {
     if (isAuthenticated) {
 
         document.getElementById("mis_reservas").style.display = "block"
+        listaTurnosSetup();
         // let user = await auth0Client.getUser()
         // let token = await auth0Client.getTokenSilently()
 

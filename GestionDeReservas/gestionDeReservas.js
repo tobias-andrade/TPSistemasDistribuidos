@@ -60,7 +60,8 @@ let buscaReservaLibre = function (userId, branchId, dateTime) {
                 }
             } else {
                 //si no se filtra por fecha, hay que ver si se filtra por branchid
-                if (branchId != null) {
+
+                if (branchId != '') {
                     if (jsonReservas[i].branchId == branchId) {
                         res.push(jsonReservas[i])
                     }
@@ -320,6 +321,48 @@ var myVar = (request, response) => {
                     }
                     break;
                 case 'DELETE':
+                    if (path.length == 3) {
+                        if (query != null) {
+                            query = new URLSearchParams(query)
+                            let userId = query.get('userId')
+                            let reservaId = query.get('reservaId')
+                            userId = userId == null ? -1 : userId
+                            reservaId = reservaId == null ? -1 : reservaId
+                            if (userId != null && reservaId != null) {
+                                let rsp = eliminaReserva(reservaId, userId)
+                                if (rsp) {
+                                    response.writeHead(config.SUCCESSCODE)
+                                    response.end(JSON.stringify({ message: 'reserva eliminada' }))
+                                } else {
+                                    response.writeHead(config.SERVICEERROR)
+                                    response.end(JSON.stringify({ messageError: 'reserva no pudo ser eliminada' }))
+                                }
+                            } else {
+                                console.log(userId)
+                                response.writeHead(config.SERVICEERROR)
+                                response.end(JSON.stringify({ messageError: 'reserva no pudo ser eliminada, userId o reservaId en null' }))
+                            }
+
+                            // let respuesta = buscaReservaLibre(userId, branchId, date)
+                            // response.writeHead(config.SUCCESSCODE)
+                            // response.end(JSON.stringify(respuesta))
+                        } else {
+                            response.writeHead(config.SERVICEERROR)
+                            response.end(JSON.stringify({ messageError: 'reserva no pudo ser eliminada' }))
+                            // let respuesta = actualizaJson()
+                            // response.writeHead(config.SUCCESSCODE);
+                            // response.end(JSON.stringify(respuesta));
+                        }
+                    } else {
+                        response.writeHead(config.SERVICEERROR)
+                        response.end(JSON.stringify({ messageError: 'servicio no encontrado' }))
+                    }
+
+
+
+
+
+                    /*
                     body = JSON.parse(body)
                     if (path.length == 3) {
                         if (body.userId != null) {
@@ -339,7 +382,7 @@ var myVar = (request, response) => {
                     } else {
                         response.writeHead(config.SERVICEERROR)
                         response.end(JSON.stringify({ messageError: 'servicio no encontrado' }))
-                    }
+                    }*/
                     break
                 default:
             }

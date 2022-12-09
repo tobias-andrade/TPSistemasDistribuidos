@@ -234,6 +234,7 @@ app.post('/api/reservas/confirmar/*', checkJwt, (req, res) => {
 })
 
 app.delete('/api/reservas/*', checkJwt, (req, res) => {
+    console.log(req.url)
     deleteReservas(req.url, req.body)
         .then((resp) => {
             res.status(config.SUCCESSCODE)
