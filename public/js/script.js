@@ -421,6 +421,7 @@ document.addEventListener('DOMContentLoaded', async function (e) {
         // show the gated content
 
         document.getElementById("mis_reservas").style.display = "block";
+        document.getElementById("div-form_email").style.display = "none";
         //listaTurnosSetup();
 
         return;
@@ -522,6 +523,7 @@ const updateUI = async () => {
     if (isAuthenticated) {
 
         document.getElementById("mis_reservas").style.display = "block"
+        document.getElementById("div-form_email").style.display = "none"
         listaTurnosSetup();
         // let user = await auth0Client.getUser()
         // let token = await auth0Client.getTokenSilently()
