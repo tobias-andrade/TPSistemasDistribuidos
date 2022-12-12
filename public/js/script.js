@@ -362,6 +362,14 @@ function alertReservaConfirmada() {
     )
 }
 
+function sleep(milliseconds) {
+    const date = Date.now();
+    let currentDate = null;
+    do {
+      currentDate = Date.now();
+    } while (currentDate - date < milliseconds);
+  }
+
 
 window.onload = async () => {
     //sendRequest: Crea el mapa de cartes y "luego" retorna los datos de ese mapa
@@ -383,6 +391,7 @@ window.onload = async () => {
                 cartesMarkerUrl.lng = element['lng'];
                 //sendRequest: Crea un marcador en el mapa de cartes
                 sendRequest("POST", createURL(cartesMarkerUrl));
+                sleep(100)
                 //Llena lista desplegable para seleccionar sucursal
                 let opt = document.createElement("option");
                 opt.value = element['branchId'];
