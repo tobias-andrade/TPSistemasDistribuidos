@@ -283,6 +283,7 @@ function buttonConfirmarSetup() {
                 //console.log(response);
                 document.getElementById("button_confirmar").disabled = true;
                 listaTurnosSetup();
+                alertReservaConfirmada();
             }).catch(response => {
                 console.log(response);
             });
@@ -295,6 +296,7 @@ function buttonConfirmarSetup() {
             sendRequestButton("POST", createURL(confirmacionTurnoUrl), { "userId": 0, "email": email }).then((response) => {
                 console.log(response);
                 document.getElementById("button_confirmar").disabled = true;
+                alertReservaConfirmada();
             }).catch(response => {
                 console.log(response);
             });
@@ -325,7 +327,6 @@ function listaTurnosSetup() {
     })
 }
 
-//terminar ...
 
 function buttonDeleteSetup() {
     let button = document.getElementById("button_eliminar");
@@ -346,45 +347,63 @@ function buttonDeleteSetup() {
     })
 }
 
+function alertReservaConfirmada() {
+    let calendar = document.getElementById("calendar");
+    let date = new Date(calendar.value);
+    let diaReserva = calendar.value;
+    let horaReserva = document.getElementById("horas_disponibles").options[document.getElementById("horas_disponibles").selectedIndex].text;
+    let sucursal = document.getElementById("suc_selection").options[document.getElementById("suc_selection").selectedIndex].text;
+
+    alert
+    (
+        "Reserva realizada correctamente para el dia: " + diaReserva + "\n" + 
+        "a la hora: " + horaReserva + "\n" +
+        "en: " + sucursal 
+    )
+}
+
+
+window.onload = async () => {
+    //sendRequest: Crea el mapa de cartes y "luego" retorna los datos de ese mapa
+    sendRequest("POST", createURL(cartesMapUrl)).then(mapData => {
+        let url = new URL(mapData.uuid + "/embed?type=map", "https://app.cartes.io/maps/");
+        document.getElementById('cartesMap').src = url.href;
+        //console.log(mapData)
+        return mapData;
+    }).then(mapData => {
+        //sendRequest: Le pide a la apiGateWay las sucursales y "luego" crea los marcadores en el mapa
+        sendRequest("GET", createURL(sucursalesUrl)).then((sucursalesData) => {
+            let sel = document.getElementById("suc_selection");
+            cartesMarkerUrl.path = `${cartesMarkerUrl.path}/${mapData.uuid}/markers`;
+            //console.log(sucursalesData)
+            sucursalesData.forEach(element => {
+                //Personaliza el marcador
+                cartesMarkerUrl.category_name = `${element['name']} | Id: ${element['branchId']}`;
+                cartesMarkerUrl.lat = element['lat'];
+                cartesMarkerUrl.lng = element['lng'];
+                //sendRequest: Crea un marcador en el mapa de cartes
+                sendRequest("POST", createURL(cartesMarkerUrl));
+                //Llena lista desplegable para seleccionar sucursal
+                let opt = document.createElement("option");
+                opt.value = element['branchId'];
+                opt.text = element['name'];
+                sel.add(opt, null);
+            });
+        })
+    });
+    calendarSetup();
+    sucursalSelectionSetup();
+    fechaSelectionSetup();
+    buttonRealizarSetup();
+    buttonConfirmarSetup();
+    buttonDeleteSetup();
+
+}
 
 
 document.addEventListener('DOMContentLoaded', async function (e) {
 
-    window.onload = async () => {
-        //sendRequest: Crea el mapa de cartes y "luego" retorna los datos de ese mapa
-        sendRequest("POST", createURL(cartesMapUrl)).then(mapData => {
-            let url = new URL(mapData.uuid + "/embed?type=map", "https://app.cartes.io/maps/");
-            document.getElementById('cartesMap').src = url.href;
-            console.log(mapData)
-            return mapData;
-        }).then(mapData => {
-            //sendRequest: Le pide a la apiGateWay las sucursales y "luego" crea los marcadores en el mapa
-            sendRequest("GET", createURL(sucursalesUrl)).then((sucursalesData) => {
-                let sel = document.getElementById("suc_selection");
-                cartesMarkerUrl.path = `${cartesMarkerUrl.path}/${mapData.uuid}/markers`;
-                sucursalesData.forEach(element => {
-                    //Personaliza el marcador
-                    cartesMarkerUrl.category_name = `${element['name']} | Id: ${element['branchId']}`;
-                    cartesMarkerUrl.lat = element['lat'];
-                    cartesMarkerUrl.lng = element['lng'];
-                    //sendRequest: Crea un marcador en el mapa de cartes
-                    sendRequest("POST", createURL(cartesMarkerUrl));
-                    //Llena lista desplegable para seleccionar sucursal
-                    let opt = document.createElement("option");
-                    opt.value = element['branchId'];
-                    opt.text = element['name'];
-                    sel.add(opt, null);
-                });
-            })
-        });
-        calendarSetup();
-        sucursalSelectionSetup();
-        fechaSelectionSetup();
-        buttonRealizarSetup();
-        buttonConfirmarSetup();
-        buttonDeleteSetup();
 
-    }
     //---------------------------
 
 
