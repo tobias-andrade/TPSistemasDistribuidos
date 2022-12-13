@@ -67,7 +67,10 @@ let buscaReservaLibre = function (userId, branchId, dateTime) {
                     }
                 } else {
                     //no se filtra por bracnid, ni fecha, pero coincide en userid
-                    res.push(jsonReservas[i])
+                    dateAux = new Date()
+                    if (jsonReservas[i].dateTime > dateAux.toISOString()) {
+                        res.push(jsonReservas[i])
+                    }
                 }
             }
         }

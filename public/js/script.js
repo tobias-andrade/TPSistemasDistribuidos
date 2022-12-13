@@ -390,13 +390,14 @@ window.onload = async () => {
                 cartesMarkerUrl.lat = element['lat'];
                 cartesMarkerUrl.lng = element['lng'];
                 //sendRequest: Crea un marcador en el mapa de cartes
+                sleep(200)
                 sendRequest("POST", createURL(cartesMarkerUrl));
-                sleep(100)
                 //Llena lista desplegable para seleccionar sucursal
                 let opt = document.createElement("option");
                 opt.value = element['branchId'];
                 opt.text = element['name'];
                 sel.add(opt, null);
+                
             });
         })
     });
