@@ -10,5 +10,11 @@
     "lat": -35.012061,
     "lng": -52.5835651,
     "name": "Sucursal del norte"
+    },
+    {
+    "branchId": 5,
+    "lat": -38.025777, 
+    "lng": -57.539109,
+    "name": "Sucursal del este"
     }
 ]

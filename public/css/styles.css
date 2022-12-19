@@ -1,0 +1,27 @@
+body {
+    background-image: radial-gradient(
+        rgba(255, 255, 255, 0.2) 8%,
+        transparent 8%
+      );
+    background-size: 5vmin 5vmin;
+    background-color: rgb(88, 189, 219);
+    display: grid;
+    font-size: 20px;
+}
+
+.div-registro {
+    padding: 10px;
+    margin: 0 auto;
+}
+
+.mis_reservas {
+    
+    display: none;
+    
+}
+
+iframe {
+    display: block;
+    margin: 1% auto;
+    border: thick double #32a1ce;
+}

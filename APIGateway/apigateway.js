@@ -117,6 +117,10 @@ const server = http.createServer((request, response) => {
   request.on('end', () => {
     console.log(request.url)
     if ((request.method === "GET") && (url[0] === "api") && (url[1] === "sucursales") && (url.length <= 3)) {
+      if (url.length == 2)
+          optionsGetSucursales.path = '/api/sucursales'
+      else
+          optionsGetSucursales.path = '/api/sucursales/' + url[length-1]
       const promise = getSucursales(optionsGetSucursales);
       promise.then((dataSucursales) => {
         response.setHeader('Access-Control-Allow-Origin', '*');
